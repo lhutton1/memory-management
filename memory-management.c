@@ -18,23 +18,29 @@ void *_malloc(size_t size)
     // free block found of size greater than requested
     } else if (searchBlock->free && searchBlock->size >= size) {
       split_block(searchBlock, size);
+      return searchBlock + sizeof(block_meta);
 
     // no suitable block found, allocating more memory
     } else {
       block_meta *newBlock = create_block(size);
       searchBlock->next = newBlock;
+      return newBlock + sizeof(block_meta);
     }
 
   // create initial block
   } else {
     block_meta *newBlock = create_block(size);
     block_head = newBlock;
+    printf("%p\n", newBlock);
+    printf("%p\n", newBlock + sizeof(block_meta));
+    return (void *)(newBlock + sizeof(block_meta));
   }
 }
 
 void _free(void *ptr)
 {
-
+  block_meta *blockToFree = (block_meta *)ptr - sizeof(block_meta);
+  blockToFree->free = true;
 }
 
 // helper functions
@@ -117,6 +123,11 @@ int main(void)
 
   //*((int*)call1) = 5;
   //printf("%d\n", *((int*)call1));
+
+  //printf("freeing call1\n");
+  _free(call1);
+  _free(call2);
+  _free(call4);
 
   print_blocks();
 }
