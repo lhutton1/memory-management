@@ -14,12 +14,8 @@
 typedef struct block_meta {
   size_t size;
   bool free;
-  struct block_meta *prev;
   struct block_meta *next;
 } block_meta;
-
-// size of the metadata used in each block.
-const int META_SIZE = 16;
 
 // head of doubly linked list block.
 block_meta *block_head = NULL;
