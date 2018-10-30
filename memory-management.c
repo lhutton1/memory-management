@@ -41,6 +41,9 @@ void _free(void *ptr)
 {
   block_meta *blockToFree = (block_meta *)ptr - sizeof(block_meta);
   blockToFree->free = true;
+
+  // merge any free blocks that are next to each other
+  merge();
 }
 
 // helper functions
@@ -85,9 +88,31 @@ block_meta *split_block(block_meta *blockToSplit, size_t requestedSize)
   return NULL;
 }
 
+void merge()
+{
+  block_meta *currentBlock = block_head;
+
+  // iterate over blocks checking if there are
+  // 2 consecutive free blocks
+  while(currentBlock->next != NULL) {
+    if (currentBlock->free && currentBlock->next->free) {
+      currentBlock->size += currentBlock->next->size;
+
+      if (currentBlock->next->next)
+        currentBlock->next = currentBlock->next->next;
+      else
+        currentBlock->next = NULL;
+        return;
+    }
+
+    currentBlock = currentBlock->next;
+  }
+}
+
 
 // DEBUGGING
-void print_block(block_meta *block) {
+void print_block(block_meta *block)
+{
   if (block) {
     printf("Block: %p\n", block);
     printf("Block Size: %d\n", block->size);
@@ -96,9 +121,11 @@ void print_block(block_meta *block) {
   }
 }
 
-void print_blocks() {
+void print_blocks()
+{
   block_meta *currentBlock = block_head;
-
+  printf("---------\n");
+  
   while (currentBlock != NULL) {
     // check for a suitable block
     print_block(currentBlock);
@@ -109,25 +136,18 @@ void print_blocks() {
 
 int main(void)
 {
-  printf("calling malloc 1..\n");
   void *call1 = _malloc(4096);
-
-  printf("calling malloc 2..\n");
   void *call2 = _malloc(1024);
-
-  printf("calling malloc 3..\n");
   void *call3 = _malloc(8192);
-
-  printf("calling malloc 4..\n");
   void *call4 = _malloc(1024);
 
-  //*((int*)call1) = 5;
-  //printf("%d\n", *((int*)call1));
-
-  //printf("freeing call1\n");
   _free(call1);
   _free(call2);
+  _free(call3);
   _free(call4);
+
+  void *call5 = _malloc(1024);
+
 
   print_blocks();
 }

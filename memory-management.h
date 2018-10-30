@@ -26,4 +26,12 @@ void *_malloc(size_t size);
 // Frees a block of memory.
 void _free(void *ptr);
 
+block_meta *search_blocks(size_t newBlockSize);
+block_meta *create_block(size_t newBlockSize);
+block_meta *split_block(block_meta *blockToSplit, size_t requestedSize);
+void merge();
+
+void print_block(block_meta *block);
+void print_blocks();
+
 #endif
