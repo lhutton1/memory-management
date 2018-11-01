@@ -31,11 +31,11 @@ void *_malloc(size_t size)
   } else {
     block_meta *newBlock = create_block(size);
     block_head = newBlock;
-    printf("%p\n", newBlock);
-    printf("%p\n", newBlock + sizeof(block_meta));
+    printf("%p\n", block_head);
     return (void *)(newBlock + sizeof(block_meta));
   }
 }
+
 
 void _free(void *ptr)
 {
@@ -45,6 +45,7 @@ void _free(void *ptr)
   // merge any free blocks that are next to each other
   merge();
 }
+
 
 // helper functions
 block_meta *search_blocks(size_t newBlockSize)
@@ -64,14 +65,33 @@ block_meta *search_blocks(size_t newBlockSize)
   }
 }
 
+
 block_meta *create_block(size_t newBlockSize)
 {
-  block_meta *newBlock = sbrk(newBlockSize + sizeof(block_meta));
-  newBlock->size = newBlockSize;
+  block_meta *newBlock;
+  int allocateSize;
+
+  // the aim here is to reduce the number of calls to sbrk. So when we call
+  // sbrk we only call it in multiples of the 'NEW_BLOCK_MULTIPLE' constant
+  const int totalSize = newBlockSize + sizeof(block_meta);
+  const int rem = (totalSize) % NEW_BLOCK_MULTIPLE;
+
+  if (rem == 0)
+    allocateSize = totalSize;
+  else
+    allocateSize = totalSize + NEW_BLOCK_MULTIPLE - rem;
+
+  // create the new block of memory and split it down to the correct size
+  // that was requested for initially.
+  newBlock = sbrk(allocateSize);
+  newBlock->size = allocateSize;
   newBlock->free = false;
   newBlock->next = NULL;
+  split_block(newBlock, newBlockSize);
+
   return newBlock;
 }
+
 
 block_meta *split_block(block_meta *blockToSplit, size_t requestedSize)
 {
@@ -87,6 +107,7 @@ block_meta *split_block(block_meta *blockToSplit, size_t requestedSize)
 
   return NULL;
 }
+
 
 void merge()
 {
@@ -110,6 +131,7 @@ void merge()
 }
 
 
+
 // DEBUGGING
 void print_block(block_meta *block)
 {
@@ -121,11 +143,12 @@ void print_block(block_meta *block)
   }
 }
 
+
 void print_blocks()
 {
   block_meta *currentBlock = block_head;
   printf("---------\n");
-  
+
   while (currentBlock != NULL) {
     // check for a suitable block
     print_block(currentBlock);
@@ -134,20 +157,20 @@ void print_blocks()
   }
 }
 
+
+
 int main(void)
 {
   void *call1 = _malloc(4096);
   void *call2 = _malloc(1024);
   void *call3 = _malloc(8192);
   void *call4 = _malloc(1024);
+  void *call5 = _malloc(1024);
 
   _free(call1);
   _free(call2);
-  _free(call3);
-  _free(call4);
-
-  void *call5 = _malloc(1024);
-
+  //_free(call3);
+  //_free(call4);
 
   print_blocks();
 }

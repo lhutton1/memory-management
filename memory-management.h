@@ -20,6 +20,10 @@ typedef struct block_meta {
 // head of doubly linked list block.
 block_meta *block_head = NULL;
 
+// alignment
+const int ALIGNMENT = 64;
+const int NEW_BLOCK_MULTIPLE = 4096;
+
 // Allocates new block of memory.
 void *_malloc(size_t size);
 
