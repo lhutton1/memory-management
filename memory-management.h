@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <unistd.h>
 
 // Datatype that stores data about the block.
@@ -21,7 +22,7 @@ typedef struct block_meta {
 block_meta *block_head = NULL;
 
 // alignment
-const int ALIGNMENT = 64;
+const int ALIGNMENT = 8;
 const int NEW_BLOCK_MULTIPLE = 4096;
 
 // Allocates new block of memory.

@@ -31,7 +31,6 @@ void *_malloc(size_t size)
   } else {
     block_meta *newBlock = create_block(size);
     block_head = newBlock;
-    printf("%p\n", block_head);
     return (void *)(newBlock + sizeof(block_meta));
   }
 }
@@ -68,6 +67,7 @@ block_meta *search_blocks(size_t newBlockSize)
 
 block_meta *create_block(size_t newBlockSize)
 {
+  void *newAddr;
   block_meta *newBlock;
   int allocateSize;
 
@@ -82,12 +82,14 @@ block_meta *create_block(size_t newBlockSize)
     allocateSize = totalSize + NEW_BLOCK_MULTIPLE - rem;
 
   // create the new block of memory and split it down to the correct size
-  // that was requested for initially.
-  newBlock = sbrk(allocateSize);
+  // that was initially requested for.
+  newBlock = (block_meta *)sbrk(allocateSize);
   newBlock->size = allocateSize;
   newBlock->free = false;
   newBlock->next = NULL;
-  split_block(newBlock, newBlockSize);
+
+  if (newBlockSize < allocateSize)
+    split_block(newBlock, newBlockSize);
 
   return newBlock;
 }
@@ -97,6 +99,12 @@ block_meta *split_block(block_meta *blockToSplit, size_t requestedSize)
 {
   block_meta *spareBlock = (block_meta *)((void *)blockToSplit + requestedSize + sizeof(block_meta));
 
+  // this process may result in the spare block not being aligned properly.
+  // To align properly we need to add padding.
+  int padding = ALIGNMENT - ((uintptr_t)spareBlock % ALIGNMENT);
+  spareBlock = (block_meta *)((void *)spareBlock + padding);
+
+  // now we initialise both the block to split and the spare block
   spareBlock->size = blockToSplit->size - requestedSize - sizeof(block_meta);
   spareBlock->free = true;
   spareBlock->next = blockToSplit->next;
@@ -140,6 +148,7 @@ void print_block(block_meta *block)
     printf("Block Size: %d\n", block->size);
     printf("Block Free: %d\n", block->free);
     printf("Block Next: %p\n", block->next);
+    printf("Block alignment: %d\n", (uintptr_t)block % 8);
   }
 }
 
@@ -164,13 +173,24 @@ int main(void)
   void *call1 = _malloc(4096);
   void *call2 = _malloc(1024);
   void *call3 = _malloc(8192);
-  void *call4 = _malloc(1024);
-  void *call5 = _malloc(1024);
-
   _free(call1);
   _free(call2);
-  //_free(call3);
-  //_free(call4);
+  _free(call3);
+  void *call4 = _malloc(1024);
+  _free(call4);
+  void *call5 = _malloc(1024);
+  void *call6 = _malloc(5555);
+  void *call7 = _malloc(5789);
+  void *call8 = _malloc(4576);
+  _free(call8);
+  _free(call5);
+  void *call9 = _malloc(5555);
+  void *call10 = _malloc(5789);
+  void *call11 = _malloc(4576);
+  _free(call6);
+  void *call12 = _malloc(55356);
+  void *call13 = _malloc(1);
+  void *call14 = _malloc(567);
 
   print_blocks();
 }
