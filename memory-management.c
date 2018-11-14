@@ -1,5 +1,8 @@
 ////////////////////////////////// Start Header ////////////////////////////////
-#include "memory-management.h"
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <unistd.h>
 
 // Datatype that stores data about the block.
 // Size - size of the block (not including the metadata)
